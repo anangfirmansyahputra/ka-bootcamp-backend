@@ -19,22 +19,22 @@ export const menuGroups = [
       {
         icon: <ChartBarStacked size={18} />,
         label: "Category",
-        route: "/category",
+        route: "/categories",
       },
       {
         icon: <ShoppingBag size={18} />,
         label: "Product",
-        route: "/product",
+        route: "/products",
       },
       {
         icon: <ShoppingCart size={18} />,
         label: "Order",
-        route: "/order",
+        route: "/orders",
       },
       {
         icon: <User size={18} />,
         label: "User",
-        route: "/user",
+        route: "/users",
       },
     ],
   },
