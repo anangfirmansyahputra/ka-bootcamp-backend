@@ -1,14 +1,24 @@
 "use client";
 
-import { createCategory } from "@/app/action";
+import { createCategory, updateCategory } from "@/app/action";
+import { Category } from "@prisma/client";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import Swal from "sweetalert2";
 
-export default function Form() {
+interface FormProps {
+  category?: Category;
+}
+
+export default function Form({ category }: FormProps) {
   const router = useRouter();
+  const { pending } = useFormStatus();
 
   const handleSubmit = async (formData: FormData) => {
-    const result = await createCategory(formData);
+    const result = category
+      ? await updateCategory(formData, category.id)
+      : await createCategory(formData);
 
     if (!result.success) {
       Swal.fire({
@@ -20,10 +30,11 @@ export default function Form() {
       await Swal.fire({
         icon: "success",
         title: "Success",
-        text: "Category created successfully",
+        text: category
+          ? "Update category successfully"
+          : "Category created successfully",
       });
 
-      router.refresh();
       router.push("/categories");
     }
   };
@@ -33,7 +44,7 @@ export default function Form() {
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
           <h3 className="font-medium text-black dark:text-white">
-            Create Category Form
+            {category ? "Edit Category Form" : "Create Category Form"}
           </h3>
         </div>
         <form action={handleSubmit}>
@@ -43,6 +54,8 @@ export default function Form() {
                 Name
               </label>
               <input
+                defaultValue={category?.name}
+                disabled={pending}
                 type="text"
                 required
                 name="name"
@@ -58,6 +71,7 @@ export default function Form() {
 
               <div className="relative z-20 bg-white dark:bg-form-input">
                 <select
+                  defaultValue={category?.isActive ? "1" : "0"}
                   name="isActive"
                   className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input"
                 >
@@ -95,6 +109,7 @@ export default function Form() {
                 Description
               </label>
               <textarea
+                defaultValue={category?.description || ""}
                 rows={6}
                 name="description"
                 placeholder="Type your description"
@@ -104,7 +119,7 @@ export default function Form() {
 
             <button
               type="submit"
-              className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90"
+              className={`flex w-full justify-center rounded bg-primary  p-3 font-medium text-gray hover:bg-opacity-90`}
             >
               Submit
             </button>

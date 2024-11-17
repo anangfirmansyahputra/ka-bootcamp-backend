@@ -2,7 +2,6 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import prisma from "@/lib/prisma";
 import dayjs from "dayjs";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default async function CategoriesPage() {
   const categories = await prisma.category.findMany();
@@ -52,7 +51,10 @@ export default async function CategoriesPage() {
 
                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
                     <div className="flex items-center space-x-3.5">
-                      <button className="hover:text-primary">
+                      <Link
+                        href={`/categories/${category.id}`}
+                        className="hover:text-primary"
+                      >
                         <svg
                           className="fill-current"
                           width="18"
@@ -70,7 +72,7 @@ export default async function CategoriesPage() {
                             fill=""
                           />
                         </svg>
-                      </button>
+                      </Link>
                       <button className="hover:text-primary">
                         <svg
                           className="fill-current"

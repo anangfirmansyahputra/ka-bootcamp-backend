@@ -5,6 +5,9 @@ const nextConfig = {
       {
         hostname: "nafyopizhmmgxzbjaejy.supabase.co",
       },
+      {
+        hostname: "www.greenscene.co.id",
+      },
     ],
   },
 };

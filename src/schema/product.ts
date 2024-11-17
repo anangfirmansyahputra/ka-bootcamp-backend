@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const colorSchema = z.object({
-  id: z.number(),
   color: z.string(),
   quantity: z.number(),
 });
