@@ -1,7 +1,7 @@
 "use client";
 
-import { createProduct } from "@/app/action";
-import { Category } from "@prisma/client";
+import { createProduct, updateProduct } from "@/app/action";
+import { Category, Product, Color as ColorType } from "@prisma/client";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,31 +12,49 @@ import { X } from "lucide-react";
 
 interface FormProductProps {
   categories: Category[];
+  product?: Product & { colors: ColorType[] };
 }
 
 interface Color {
+  id?: number;
   color: string;
   quantity: number;
 }
 
-export default function FormProduct({ categories }: FormProductProps) {
+export default function FormProduct({ categories, product }: FormProductProps) {
   const imagesLocal = JSON.parse(localStorage.getItem("images") || "[]");
-  const [images, setImages] = useState<string[]>(imagesLocal || []);
+
+  const [images, setImages] = useState<string[]>(
+    product ? product.images : imagesLocal,
+  );
 
   const router = useRouter();
 
-  const [colors, setColors] = useState<Color[]>([
-    {
-      color: "#000000",
-      quantity: 20,
-    },
-  ]);
+  const [colors, setColors] = useState<Color[]>(
+    product
+      ? product.colors
+      : [
+          {
+            color: "#000000",
+            quantity: 20,
+          },
+        ],
+  );
+
+  const [deleteColors, setDeleteColors] = useState<number[]>([]);
 
   async function handleSubmit(formData: FormData) {
-    const results = await createProduct(formData, colors, images);
+    const results = product
+      ? await updateProduct(formData, colors, images, product.id, deleteColors)
+      : await createProduct(formData, colors, images);
 
     if (results.success) {
-      // router.push("/products");
+      localStorage.setItem("images", JSON.stringify([]));
+
+      toast.success(
+        product ? "Update product success" : "Create product success",
+      );
+      router.push("/products");
     } else {
       Swal.fire({
         icon: "error",
@@ -58,7 +76,11 @@ export default function FormProduct({ categories }: FormProductProps) {
     setColors(newColors);
   }
 
-  function handleDeleteColor(index: number) {
+  function handleDeleteColor(index: number, id?: number) {
+    if (id) {
+      setDeleteColors([...deleteColors, id]);
+    }
+
     setColors(colors.filter((_, i) => i !== index));
   }
 
@@ -110,6 +132,22 @@ export default function FormProduct({ categories }: FormProductProps) {
     }
   }
 
+  async function handleDeleteImage(filename: string) {
+    try {
+      await axios.delete(`/api/images/${filename}`);
+      const newImages = images.filter((image) => image !== filename);
+
+      setImages(newImages);
+      localStorage.setItem("images", JSON.stringify(newImages));
+      toast.success("File deleted successfully");
+    } catch (err: any) {
+      console.log(err);
+      toast.error(err?.response?.data?.message || "Internal server error");
+    }
+  }
+
+  console.log("colors", colors);
+
   return (
     <div className="grid grid-cols-2 gap-5">
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -126,6 +164,7 @@ export default function FormProduct({ categories }: FormProductProps) {
                 Name
               </label>
               <input
+                defaultValue={product?.name}
                 type="text"
                 required
                 name="name"
@@ -141,6 +180,7 @@ export default function FormProduct({ categories }: FormProductProps) {
                 Price
               </label>
               <input
+                defaultValue={product?.price}
                 type="number"
                 required
                 name="price"
@@ -158,6 +198,7 @@ export default function FormProduct({ categories }: FormProductProps) {
 
               <div className="relative z-20 bg-white dark:bg-form-input">
                 <select
+                  defaultValue={product?.categoryId.toString()}
                   name="categoryId"
                   className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input"
                 >
@@ -200,6 +241,7 @@ export default function FormProduct({ categories }: FormProductProps) {
                 Company
               </label>
               <input
+                defaultValue={product?.company}
                 type="text"
                 required
                 name="company"
@@ -220,6 +262,7 @@ export default function FormProduct({ categories }: FormProductProps) {
                     onChange={(e) =>
                       handleChangeColor(index, e.target.value, item.quantity)
                     }
+                    defaultValue={item?.color}
                     value={item.color}
                     type="color"
                     required
@@ -234,6 +277,7 @@ export default function FormProduct({ categories }: FormProductProps) {
                         Number(e.target.value),
                       )
                     }
+                    defaultValue={item?.quantity}
                     type="number"
                     required
                     name="quantity"
@@ -243,7 +287,7 @@ export default function FormProduct({ categories }: FormProductProps) {
 
                   <button
                     type="button"
-                    onClick={() => handleDeleteColor(index)}
+                    onClick={() => handleDeleteColor(index, item.id)}
                     className="col-span-1 w-full rounded-md bg-red py-3 text-white"
                   >
                     Delete
@@ -282,6 +326,7 @@ export default function FormProduct({ categories }: FormProductProps) {
                 Description
               </label>
               <textarea
+                defaultValue={product?.description || ""}
                 rows={6}
                 name="description"
                 placeholder="Type your description"
@@ -312,7 +357,10 @@ export default function FormProduct({ categories }: FormProductProps) {
               className="object-contain"
             />
 
-            <button className="absolute -right-4 -top-4 rounded-full bg-red p-3 text-white transition-opacity hover:bg-red/90">
+            <button
+              onClick={() => handleDeleteImage(image)}
+              className="absolute -right-4 -top-4 rounded-full bg-red p-3 text-white transition-opacity hover:bg-red/90"
+            >
               <X />
             </button>
           </div>

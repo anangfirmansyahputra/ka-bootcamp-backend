@@ -1,8 +1,15 @@
+import UpdateDeleteButton from "@/app/_components/update-delete-btn";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import prisma from "@/lib/prisma";
 import { Product } from "@/types/product";
 import Image from "next/image";
 import React from "react";
+
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Products - Dashboard Ecommerce",
+};
 
 export default async function ProductPage() {
   const products = await prisma.product.findMany({
@@ -11,8 +18,6 @@ export default async function ProductPage() {
       colors: true,
     },
   });
-
-  console.log(products);
 
   return (
     <div>
@@ -51,10 +56,7 @@ export default async function ProductPage() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="h-12.5 w-15 rounded-md">
                   <Image
-                    src={
-                      "https://www.greenscene.co.id/wp-content/uploads/2024/08/kamen-rider-gavv-4-1200x675.jpg"
-                    }
-                    // src={(product.images as string[])[0]}
+                    src={`${process.env.SUPABASE_PUBLIC_IMAGE}/${(product.images as string[])[0]}`}
                     width={60}
                     height={50}
                     alt="Product"
@@ -91,10 +93,11 @@ export default async function ProductPage() {
               </div>
             </div>
             <div className="col-span-1 flex items-center">
-              <p className="text-sm text-meta-3">
-                {/* ${product.profit} */}
-                test
-              </p>
+              <UpdateDeleteButton
+                id={product.id}
+                url={`/products/${product.id}`}
+                type="product"
+              />
             </div>
           </div>
         ))}

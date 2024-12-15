@@ -113,6 +113,27 @@ export async function createCategory(formData: FormData) {
   }
 }
 
+export async function deleteCategory(id: number) {
+  try {
+    await prisma.category.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    return {
+      success: true,
+      message: "Category has been deleted",
+    };
+  } catch (err: any) {
+    console.log(err);
+    return {
+      success: false,
+      message: err?.message || "Internal server error",
+    };
+  }
+}
+
 export async function updateCategory(formData: FormData, id: number) {
   try {
     const body = {
@@ -185,6 +206,101 @@ export async function createProduct(
           color: color.color,
           quantity: color.quantity,
           productId: product.id,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      data: product,
+    };
+  } catch (err: any) {
+    console.log(err);
+    if (err instanceof ZodError) {
+      return { success: false, error: "Please insert a correct data" };
+    } else {
+      return { success: false, error: err?.message || "Internal server error" };
+    }
+  }
+}
+
+export async function deleteProduct(id: number) {
+  await prisma.product.delete({
+    where: {
+      id: Number(id),
+    },
+  });
+
+  return {
+    success: true,
+    message: "Product has been deleted",
+  };
+}
+
+export async function updateProduct(
+  formData: FormData,
+  colors: {
+    color: string;
+    quantity: number;
+    id?: number;
+  }[],
+  images: string[],
+  id: number,
+  idsColor: number[],
+) {
+  try {
+    const body = {
+      name: formData.get("name"),
+      description: formData.get("description"),
+      categoryId: Number(formData.get("categoryId")),
+      price: Number(formData.get("price")),
+      company: formData.get("company"),
+      images,
+      colors,
+    };
+
+    productSchema.parse(body);
+
+    const product = await prisma.product.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: body.name as string,
+        description: body.description as string,
+        categoryId: Number(body.categoryId),
+        images: body.images,
+        price: Number(body.price),
+        company: body.company as string,
+      },
+    });
+
+    for (const color of colors) {
+      if (!color.id) {
+        await prisma.color.create({
+          data: {
+            color: color.color,
+            quantity: color.quantity,
+            productId: product.id,
+          },
+        });
+      } else {
+        await prisma.color.update({
+          where: {
+            id: color.id,
+          },
+          data: {
+            color: color.color,
+            quantity: color.quantity,
+          },
+        });
+      }
+    }
+
+    for (const id of idsColor) {
+      await prisma.color.delete({
+        where: {
+          id: id,
         },
       });
     }

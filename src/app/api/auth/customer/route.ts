@@ -33,12 +33,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (user.roles !== "ADMIN") {
+    if (user?.roles !== "CUSTOMER") {
       return NextResponse.json(
         {
           data: null,
           success: false,
-          message: "User not admin",
+          message: "User not customer",
         },
         {
           status: 401,
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (compareSync(body.password, user.password) === false) {
+    if (!compareSync(body.password, user.password)) {
       return NextResponse.json(
         {
           data: null,
@@ -82,15 +82,10 @@ export async function POST(request: Request) {
     });
   } catch (err: any) {
     console.log(err);
-    return NextResponse.json(
-      {
-        data: null,
-        success: false,
-        message: "Internal server error",
-      },
-      {
-        status: 500,
-      },
-    );
+    return NextResponse.json({
+      data: null,
+      success: false,
+      message: "Internal server error",
+    });
   }
 }

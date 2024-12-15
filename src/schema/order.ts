@@ -9,4 +9,8 @@ const itemSchema = z.object({
 export const orderSchema = z.object({
   items: z.array(itemSchema),
   userId: z.number(),
+  address: z.string(),
+  postalCode: z.string(),
+  country: z.string(),
+  city: z.string(),
 });

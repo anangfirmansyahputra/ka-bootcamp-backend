@@ -6,6 +6,8 @@ import ChartTwo from "../Charts/ChartTwo";
 import ChatCard from "../Chat/ChatCard";
 import TableOne from "../Tables/TableOne";
 import CardDataStats from "../CardDataStats";
+import { Category, Color, OrderItems, Product, User } from "@prisma/client";
+import { Profit } from "@/types/profit";
 
 const MapOne = dynamic(() => import("@/components/Maps/MapOne"), {
   ssr: false,
@@ -15,11 +17,57 @@ const ChartThree = dynamic(() => import("@/components/Charts/ChartThree"), {
   ssr: false,
 });
 
-const ECommerce: React.FC = () => {
+type ECommerceProps = {
+  customers: number;
+  categories: (Category & {
+    products: Product[];
+  })[];
+  products: (Product & {
+    items: (OrderItems & {
+      color: Color;
+    })[];
+    colors: Color[];
+    category: Category;
+  })[];
+  orders: number;
+  profits: Profit[];
+};
+
+const ECommerce = ({
+  categories,
+  customers,
+  orders,
+  products,
+  profits,
+}: ECommerceProps) => {
+  const topProducts = products
+    .map((product) => {
+      const { items } = product;
+
+      let quantity = 0;
+      items.forEach((item) => {
+        quantity += item.quantity;
+      });
+
+      // const quantity = items.reduce((total, item) => total + item.quantity, 0);
+
+      return {
+        ...product,
+        quantity,
+      };
+    })
+    .sort((a, b) => b.quantity - a.quantity)
+    .filter((product) => product.quantity > 0);
+
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-        <CardDataStats title="Total views" total="$3.456K" rate="0.43%" levelUp>
+        <CardDataStats
+          title="Total Categories"
+          total={categories.length.toString()}
+          // rate="0.43%"
+          levelUp
+        >
           <svg
             className="fill-primary dark:fill-white"
             width="22"
@@ -38,7 +86,12 @@ const ECommerce: React.FC = () => {
             />
           </svg>
         </CardDataStats>
-        <CardDataStats title="Total Profit" total="$45,2K" rate="4.35%" levelUp>
+        <CardDataStats
+          title="Total Orders"
+          total={orders.toString()}
+          // rate="4.35%"
+          levelUp
+        >
           <svg
             className="fill-primary dark:fill-white"
             width="20"
@@ -61,7 +114,12 @@ const ECommerce: React.FC = () => {
             />
           </svg>
         </CardDataStats>
-        <CardDataStats title="Total Product" total="2.450" rate="2.59%" levelUp>
+        <CardDataStats
+          title="Total Products"
+          total={products.length.toString()}
+          // rate="2.59%"
+          levelUp
+        >
           <svg
             className="fill-primary dark:fill-white"
             width="22"
@@ -80,7 +138,12 @@ const ECommerce: React.FC = () => {
             />
           </svg>
         </CardDataStats>
-        <CardDataStats title="Total Users" total="3.456" rate="0.95%" levelDown>
+        <CardDataStats
+          title="Total Customers"
+          total={customers.toString()}
+          // rate="0.95%"
+          levelUp
+        >
           <svg
             className="fill-primary dark:fill-white"
             width="22"
@@ -106,14 +169,14 @@ const ECommerce: React.FC = () => {
       </div>
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        <ChartOne />
-        <ChartTwo />
-        <ChartThree />
-        <MapOne />
-        <div className="col-span-12 xl:col-span-8">
-          <TableOne />
+        {/* <ChartOne /> */}
+        {/* <ChartTwo profits={profits} /> */}
+        {/* <ChartThree categories={categories} /> */}
+        {/* <MapOne /> */}
+        <div className="col-span-12">
+          <TableOne products={topProducts} />
         </div>
-        <ChatCard />
+        {/* <ChatCard /> */}
       </div>
     </>
   );
